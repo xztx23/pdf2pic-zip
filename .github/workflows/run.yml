@@ -1,4 +1,4 @@
-name: PDF 转图片并打包 ZIP
+name: PDF 转图片并打包 ZIP（存仓库文件夹版）
 on:
   workflow_dispatch:
     inputs:
@@ -9,16 +9,14 @@ on:
         description: "学号（作为唯一ID）"
         required: true
 
-# 关键修复：显式授予所有必要权限
 permissions:
-  contents: write  # 允许创建 Release 和 Tag
-  actions: read
+  contents: write  # 允许提交文件到仓库
 
 jobs:
   convert:
     runs-on: ubuntu-latest
     steps:
-      - name: 拉取代码
+      - name: 拉取仓库代码
         uses: actions/checkout@v4
 
       - name: 安装依赖
@@ -26,16 +24,22 @@ jobs:
           sudo apt-get update -y
           pip install -r requirements.txt
 
-      - name: 下载 PDF
+      - name: 下载 PDF 文件
         run: wget -O "input_${{ inputs.student_id }}.pdf" "${{ inputs.pdf_url }}"
 
-      - name: 执行转换
+      - name: 执行 PDF 转图片并打包 ZIP
         run: python3 convert.py "${{ inputs.student_id }}"
 
-      - name: 创建 Release 并上传 ZIP
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: "student-${{ inputs.student_id }}"
-          files: "result_${{ inputs.student_id }}.zip"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 创建 converted_zip 文件夹（如果不存在）
+        run: mkdir -p converted_zip
+
+      - name: 移动 ZIP 文件到 converted_zip 文件夹
+        run: mv "result_${{ inputs.student_id }}.zip" converted_zip/
+
+      - name: 提交并推送 ZIP 文件到仓库
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add converted_zip/result_${{ inputs.student_id }}.zip
+          git commit -m "feat: add converted zip for student ${{ inputs.student_id }}"
+          git push
