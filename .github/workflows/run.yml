@@ -1,0 +1,36 @@
+name: PDF 转图片并打包 ZIP
+on:
+  workflow_dispatch:
+    inputs:
+      pdf_url:
+        description: "PDF 文件下载地址"
+        required: true
+      task_id:
+        description: "任务唯一ID"
+        required: true
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装依赖
+        run: |
+          sudo apt-get update -y
+          pip install -r requirements.txt
+
+      - name: 下载 PDF
+        run: wget -O "input_${{ inputs.task_id }}.pdf" "${{ inputs.pdf_url }}"
+
+      - name: 执行转换
+        run: python3 convert.py "${{ inputs.task_id }}"
+
+      - name: 创建 Release 并上传 ZIP
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "task-${{ inputs.task_id }}"
+          files: "result_${{ inputs.task_id }}.zip"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
