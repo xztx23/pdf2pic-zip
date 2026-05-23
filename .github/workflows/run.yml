@@ -10,7 +10,7 @@ on:
         required: true
 
 permissions:
-  contents: write  # 允许提交文件到仓库
+  contents: write  # 关键：授予写入权限，用于提交文件
 
 jobs:
   convert:
@@ -18,6 +18,9 @@ jobs:
     steps:
       - name: 拉取仓库代码
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true  # 关键：保持凭证，让后续git操作有权限
 
       - name: 安装依赖
         run: |
@@ -42,4 +45,4 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add converted_zip/result_${{ inputs.student_id }}.zip
           git commit -m "feat: add converted zip for student ${{ inputs.student_id }}"
-          git push
+          git push origin HEAD:main
