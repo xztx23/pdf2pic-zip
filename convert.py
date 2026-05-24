@@ -24,9 +24,14 @@ for page_index in range(len(doc)):
     page = doc[page_index]
     pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 高清 2 倍图
     img_num = page_index + 1
-    img_path = os.path.join(output_dir, f"{img_num}.png")
+    
+    # ============== 这里修改：文件名 = 宽度x高度 ==============
+    width = pix.width
+    height = pix.height
+    img_path = os.path.join(output_dir, f"{img_num}_{width}x{height}.png")
+    
     pix.save(img_path)
-    print(f"→ 已生成：{img_num}.png")
+    print(f"→ 已生成：{img_num}_{width}x{height}.png")
 
 print(f"[INFO] PDF 总页数：{len(doc)}")
 
